@@ -15,6 +15,8 @@ Repositori ini berisi pengerjaan tugas individu untuk implementasi Regression Te
 ---
 
 ## 1. Skenario & Kualitas Test Case
+![Hasil Pengujian](./assets/test.png)
+
 Terdapat **10 test case** yang disusun khusus untuk menguji fungsionalitas modul Reservasi (`/api/reservasi`). Pengujian ini sudah mencakup jalur normal (*happy path*) dan skenario gagal (*error scenario*) seperti pencegahan input jam yang tidak valid atau jadwal meja yang bentrok. Setiap blok pengujian ditulis secara terstruktur menggunakan pola **AAA (Arrange, Act, Assert)** agar kode lebih mudah dibaca.
 
 ---
