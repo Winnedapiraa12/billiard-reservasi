@@ -30,13 +30,19 @@ app.use((err, req, res, next) => {
 // Start Server
 const PORT = process.env.PORT || 5000;
 
-sequelize.sync({ alter: true })
-  .then(() => {
-    console.log('Database terhubung & tersinkronisasi');
-    app.listen(PORT, () => {
-      console.log(`Server Backend jalan di http://localhost:${PORT}`);
+// CEK ENVIRONMENT: Jangan jalankan koneksi DB dan server jika sedang mode testing
+if (process.env.NODE_ENV !== 'test') {
+  sequelize.sync({ alter: true })
+    .then(() => {
+      console.log('Database terhubung & tersinkronisasi');
+      app.listen(PORT, () => {
+        console.log(`Server Backend jalan di http://localhost:${PORT}`);
+      });
+    })
+    .catch(err => {
+      console.log('Gagal sync database:', err);
     });
-  })
-  .catch(err => {
-    console.log('Gagal sync database:', err);
-  });
+}
+
+// WAJIB DITAMBAHKAN: Export app agar bisa dipanggil oleh file test (Supertest)
+module.exports = app;
