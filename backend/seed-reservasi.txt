@@ -1,0 +1,57 @@
+// seed-reservasi.js
+require('dotenv').config();
+// PERBAIKAN: Path diubah menjadi './models' karena file ini sudah di dalam folder backend
+const { Reservasi, User, Meja } = require('./models');
+
+const seedData = async () => {
+  try {
+    // 1. Ambil 1 User dan 1 Meja yang sudah ada sebagai contoh
+    const user = await User.findOne({ where: { role: 'customer' } });
+    const meja = await Meja.findOne();
+
+    if (!user || !meja) {
+      console.log('Harap buat minimal 1 customer dan 1 meja dari website dulu!');
+      process.exit(1);
+    }
+
+    // 2. Buat data untuk tanggal-tanggal acak dalam 30 hari terakhir
+    const testData = [
+      { tglMundur: 2, jamMulai: '10:00', jamSelesai: '13:00' }, // 2 Hari lalu, 3 jam
+      { tglMundur: 5, jamMulai: '15:00', jamSelesai: '17:00' }, // 5 Hari lalu, 2 jam
+      { tglMundur: 5, jamMulai: '19:00', jamSelesai: '21:00' }, // 5 Hari lalu, 2 jam
+      { tglMundur: 10, jamMulai: '14:00', jamSelesai: '18:00' },// 10 Hari lalu, 4 jam
+      { tglMundur: 14, jamMulai: '09:00', jamSelesai: '10:00' },// 14 Hari lalu, 1 jam
+      { tglMundur: 20, jamMulai: '20:00', jamSelesai: '23:00' } // 20 Hari lalu, 3 jam
+    ];
+
+    console.log('Menyiapkan injeksi data...');
+
+    for (const item of testData) {
+      const targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() - item.tglMundur);
+      
+      // Format ke YYYY-MM-DD
+      const isoDate = targetDate.toISOString().split('T')[0];
+
+      await Reservasi.create({
+        user_id: user.id,
+        meja_id: meja.id,
+        tanggal: isoDate,
+        jam_mulai: item.jamMulai,
+        jam_selesai: item.jamSelesai,
+        status: 'selesai' // Langsung set status selesai agar terhitung di grafik
+      });
+      console.log(`[OK] Data disuntikkan untuk tanggal: ${isoDate}`);
+    }
+
+    console.log('--- SELESAI! ---');
+    console.log('Silakan refresh halaman Dashboard Admin Anda.');
+    process.exit();
+
+  } catch (error) {
+    console.error('Terjadi kesalahan:', error);
+    process.exit(1);
+  }
+};
+
+seedData();

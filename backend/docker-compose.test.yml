@@ -1,0 +1,24 @@
+version: '3.8'
+services:
+  db-test:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: billiardpro_test
+    ports:
+      - "3307:3306" # Menggunakan port 3307 agar tidak bentrok dengan MySQL lokalmu
+  
+  app-test:
+    build: .
+    environment:
+      - DB_HOST=db-test
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - DB_NAME=billiardpro_test
+      - NODE_ENV=test
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db-test
+    # Perintah ini akan otomatis menjalankan unit test saat container menyala
+    command: npm run test

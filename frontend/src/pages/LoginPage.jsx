@@ -1,0 +1,392 @@
+import React, { useState, useEffect, useContext } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
+import { AuthContext } from '../context/AuthContext';
+
+const LoginPage = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user, login } = useContext(AuthContext);
+
+  // States
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // Tangkap state flash message dari halaman register (opsional)
+  const [successMessage, setSuccessMessage] = useState(
+    location.state?.registered ? 'Registrasi berhasil. Silakan masuk.' : ''
+  );
+
+  // Smart Redirect jika sudah login
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
+
+  // Handler Submit
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccessMessage('');
+
+    if (!email || !password) return setError('Email dan password wajib diisi.');
+
+    setIsLoading(true);
+
+    // =================================================================
+    // JALUR RAHASIA UNTUK TESTING ADMIN (BYPASS TANPA BACKEND)
+    // Hapus blok ini jika backend asli Anda sudah siap nanti!
+    if (email === 'admin@gmail.com' && password === 'admin123') {
+      setTimeout(() => {
+        const fakeAdminData = { 
+          id: 999, 
+          nama: "Super Admin", 
+          email: "admin@gmail.com", 
+          role: "admin" // <-- Kunci pembuka Dashboard Admin
+        };
+        login(fakeAdminData, "fake-admin-token-12345");
+        navigate('/admin'); // Arahkan langsung ke dashboard admin
+        setIsLoading(false);
+      }, 800); // Efek loading buatan agar terasa nyata
+      return; 
+    }
+    // =================================================================
+
+    try {
+      // Ganti URL dengan endpoint API backend Anda
+      const response = await axios.post('http://localhost:5000/api/auth/login', {
+        email,
+        password
+      });
+
+      const { token, user: userData } = response.data.data;
+      
+      // Simpan state login
+      login(userData, token);
+
+      // Smart Redirect Logic: Jika user login karena ingin reservasi meja
+      const origin = location.state?.from || '/';
+      const mejaId = location.state?.mejaId || null;
+      
+      if (mejaId) {
+        navigate(origin, { state: { mejaId } });
+      } else {
+        navigate(origin);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Kredensial tidak valid atau terjadi kesalahan.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="login-root">
+      {/* CSS INJECTED (Identik dengan RegisterPage) */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        .login-root {
+          display: flex;
+          flex-direction: row;
+          height: 100vh;
+          overflow: hidden;
+          background-color: #FFFDF8;
+          font-family: 'DM Sans', sans-serif;
+        }
+
+        .serif { font-family: 'DM Serif Display', serif; }
+
+        /* KEYFRAMES ANIMASI */
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; } to { opacity: 1; }
+        }
+        @keyframes float {
+          0%, 100% { transform: translateY(0); }
+          50%      { transform: translateY(-8px); }
+        }
+        @keyframes pulseBlob {
+          0%, 100% { opacity: 0.4; transform: scale(1); }
+          50%      { opacity: 0.7; transform: scale(1.05); }
+        }
+        @keyframes dotPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(201,168,76,0.4); }
+          50%      { box-shadow: 0 0 0 6px rgba(201,168,76,0); }
+        }
+
+        /* PANEL KIRI (ESPRESSO) & CLIP PATH DIAGONAL */
+        .panel-left {
+          width: 45%;
+          background-color: #1C1100;
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          padding: 44px 48px;
+          z-index: 10;
+        }
+        .panel-left::after {
+          content: '';
+          position: absolute;
+          top: 0; right: -1px;
+          width: 60px; height: 100%;
+          background: #FFFDF8;
+          clip-path: polygon(60px 0, 60px 100%, 0 100%);
+          z-index: 10;
+        }
+
+        /* DOT GRID PATTERN */
+        .dot-grid {
+          position: absolute; inset: 0; opacity: 0.4;
+          background-image: radial-gradient(circle, rgba(201,168,76,0.15) 1px, transparent 1px);
+          background-size: 28px 28px;
+          z-index: 1;
+        }
+
+        /* PANEL KANAN (WARM WHITE) */
+        .panel-right {
+          flex: 1;
+          background-color: #FFFDF8;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 44px 52px;
+          position: relative;
+          z-index: 5;
+        }
+
+        /* FORM ELEMENTS */
+        .form-input {
+          width: 100%;
+          background-color: #FFFFFF;
+          border: 1.5px solid #EDE5D5;
+          border-radius: 10px;
+          padding: 12px 14px;
+          color: #1C1100;
+          font-size: 13px;
+          font-weight: 400;
+          font-family: 'DM Sans', sans-serif;
+          outline: none;
+          transition: border-color 0.25s, box-shadow 0.25s;
+          position: relative; 
+          z-index: 20;
+        }
+        .form-input::placeholder { color: #C8B890; font-weight: 300; }
+        .form-input:focus {
+          border-color: #C9A84C;
+          box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+        }
+
+        .btn-submit {
+          width: 100%; padding: 13px;
+          background-color: #C9A84C; color: #1C1100;
+          font-size: 13px; font-weight: 600; font-family: 'DM Sans', sans-serif;
+          border: none; border-radius: 10px;
+          letter-spacing: 0.6px; margin-bottom: 16px; margin-top: 8px;
+          transition: transform 0.15s, box-shadow 0.2s, background 0.2s;
+          cursor: pointer;
+          position: relative; 
+          z-index: 20;
+        }
+        .btn-submit:hover:not(:disabled) {
+          background-color: #D4B558;
+          transform: translateY(-1px);
+          box-shadow: 0 6px 20px rgba(201,168,76,0.3);
+        }
+        .btn-submit:active:not(:disabled) { transform: translateY(0); }
+        .btn-submit:disabled { opacity: 0.7; cursor: default; }
+
+        .link-hover { 
+          color: #8A5A10; font-weight: 600; cursor: pointer; transition: color 0.2s; 
+          position: relative; 
+          z-index: 50; 
+        }
+        .link-hover:hover { color: #C9A84C; }
+
+        /* RESPONSIVE */
+        .mobile-brand { display: none; }
+        @media (max-width: 767px) {
+          .panel-left { display: none !important; }
+          .panel-right { padding: 40px 28px !important; }
+          .mobile-brand { display: block; text-align: center; color: #C9A84C; font-size: 28px; margin-bottom: 32px; }
+        }
+      `}</style>
+
+      {/* ========================================================= */}
+      {/* PANEL KIRI (ESPRESSO)                                     */}
+      {/* ========================================================= */}
+      <div className="panel-left">
+        {/* Dekorasi Background */}
+        <div className="dot-grid" />
+        <div style={{
+          position: 'absolute', top: '-80px', left: '-80px', width: '300px', height: '300px', borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(201,168,76,0.12) 0%, transparent 70%)',
+          animation: 'pulseBlob 6s ease-in-out infinite', zIndex: 2, pointerEvents: 'none'
+        }} />
+        <div style={{
+          position: 'absolute', bottom: '-40px', right: '30px', width: '200px', height: '200px', borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(201,168,76,0.07) 0%, transparent 70%)',
+          animation: 'pulseBlob 8s ease-in-out infinite reverse', zIndex: 2, pointerEvents: 'none'
+        }} />
+
+        {/* Konten Atas Panel Kiri */}
+        <div style={{ position: 'relative', zIndex: 5 }}>
+          
+          {/* Badge Live */}
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: '7px', marginBottom: '28px',
+            background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.2)',
+            borderRadius: '20px', padding: '5px 12px', animation: 'fadeIn 0.8s backwards'
+          }}>
+            <div style={{ width: '5px', height: '5px', backgroundColor: '#C9A84C', borderRadius: '50%', animation: 'dotPulse 2s infinite' }} />
+            <span style={{ fontSize: '11px', color: '#C9A84C', letterSpacing: '1px', fontWeight: '500' }}>Akses Member</span>
+          </div>
+
+          {/* Orb Icon Melayang */}
+          <div style={{ width: '72px', height: '72px', position: 'relative', marginBottom: '32px', animation: 'float 4s ease-in-out infinite' }}>
+            <div style={{ position: 'absolute', inset: 0, border: '1px solid rgba(201,168,76,0.2)', borderRadius: '50%' }} />
+            <div style={{ position: 'absolute', inset: '10px', border: '1px solid rgba(201,168,76,0.35)', borderRadius: '50%' }} />
+            <div style={{ position: 'absolute', inset: '20px', backgroundColor: 'rgba(201,168,76,0.15)', border: '1px solid rgba(201,168,76,0.5)', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" strokeWidth="1.5">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Headline & Deskripsi */}
+          <h1 className="serif" style={{ fontSize: '32px', color: '#FAF0DC', lineHeight: '1.2', animation: 'fadeUp 0.9s 0.1s backwards' }}>
+            Selamat datang <br />
+            <span style={{ fontStyle: 'italic', color: '#C9A84C' }}>kembali</span> <br />
+            di BilliardPro.
+          </h1>
+          <p style={{ fontSize: '13px', color: 'rgba(250,240,220,0.45)', fontWeight: '300', lineHeight: '1.7', maxWidth: '240px', marginTop: '12px', marginBottom: '36px', animation: 'fadeUp 0.9s 0.2s backwards' }}>
+            Akses akun Anda untuk melanjutkan permainan dan mengelola reservasi yang telah dibuat.
+          </p>
+
+          {/* Feature List Khusus Login */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {[
+              { i: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z', t: 'Privasi Terjamin', d: 'Sesi login Anda dilindungi', delay: '0.3s' },
+              { i: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', t: 'Lanjutkan Aktivitas', d: 'Akses riwayat dan pemesanan', delay: '0.4s' }
+            ].map((item, idx) => (
+              <div key={idx} style={{ display: 'flex', gap: '10px', animation: `fadeUp 0.8s ${item.delay} backwards` }}>
+                <div style={{ width: '28px', height: '28px', backgroundColor: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" strokeWidth="2"><path d={item.i}/></svg>
+                </div>
+                <div>
+                  <strong style={{ display: 'block', fontSize: '12px', color: 'rgba(250,240,220,0.85)', fontWeight: '500' }}>{item.t}</strong>
+                  <span style={{ fontSize: '12px', color: 'rgba(250,240,220,0.55)', fontWeight: '400' }}>{item.d}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer Kiri */}
+        <div style={{ borderTop: '1px solid rgba(201,168,76,0.1)', paddingTop: '20px', position: 'relative', zIndex: 5, animation: 'fadeIn 1s 0.6s backwards' }}>
+          <div className="serif" style={{ fontSize: '16px', color: '#C9A84C', fontStyle: 'italic', letterSpacing: '1px' }}>BilliardPro</div>
+          <div style={{ fontSize: '10px', color: 'rgba(201,168,76,0.4)', letterSpacing: '2px', textTransform: 'uppercase', marginTop: '2px' }}>Premium Billiard Experience</div>
+        </div>
+      </div>
+
+      {/* ========================================================= */}
+      {/* PANEL KANAN (WARM WHITE)                                  */}
+      {/* ========================================================= */}
+      <div className="panel-right">
+        {/* Dekorasi Kanan dengan pointer-events: none */}
+        <div style={{ position: 'absolute', top: '30px', right: '30px', width: '120px', height: '120px', border: '1px solid rgba(201,168,76,0.08)', borderRadius: '50%', pointerEvents: 'none', zIndex: 1 }} />
+        <div style={{ position: 'absolute', bottom: '50px', right: '80px', width: '60px', height: '60px', border: '1px solid rgba(201,168,76,0.06)', borderRadius: '50%', pointerEvents: 'none', zIndex: 1 }} />
+
+        <div style={{ maxWidth: '340px', width: '100%', position: 'relative', zIndex: 20 }}>
+          <div className="serif mobile-brand">BilliardPro</div>
+
+          {/* JUDUL FORM */}
+          <div style={{ animation: 'fadeUp 0.7s 0.1s backwards' }}>
+            <h2 className="serif" style={{ fontSize: '28px', color: '#1C1100', fontWeight: '400', marginBottom: '6px' }}>Masuk Akun</h2>
+            <p style={{ fontSize: '13px', color: '#A08860', fontWeight: '300', marginBottom: '32px' }}>Silakan masukkan email dan password Anda</p>
+          </div>
+
+          {/* Pesan Sukses (Jika dari Register) */}
+          {successMessage && (
+            <div style={{ 
+              backgroundColor: '#E8F5E9', border: '1px solid #5DCAA5', color: '#2E7D32', 
+              padding: '10px 14px', borderRadius: '8px', fontSize: '12px', marginBottom: '20px',
+              animation: 'fadeIn 0.5s'
+            }}>
+              {successMessage}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit}>
+            {/* Email */}
+            <div style={{ marginBottom: '18px', animation: 'fadeUp 0.7s 0.2s backwards' }}>
+              <label style={{ display: 'block', fontSize: '11px', color: '#8A6A30', fontWeight: '500', letterSpacing: '0.5px', marginBottom: '8px' }}>Email</label>
+              <input 
+                className="form-input" 
+                type="email" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                placeholder="email@contoh.com" 
+              />
+            </div>
+
+            {/* Password */}
+            <div style={{ marginBottom: '8px', animation: 'fadeUp 0.7s 0.3s backwards' }}>
+              <label style={{ display: 'block', fontSize: '11px', color: '#8A6A30', fontWeight: '500', letterSpacing: '0.5px', marginBottom: '8px' }}>Password</label>
+              <input 
+                className="form-input" 
+                type="password" 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+                placeholder="••••••••" 
+              />
+            </div>
+
+            {/* Lupa Password Link */}
+            <div style={{ textAlign: 'right', marginBottom: '24px', animation: 'fadeUp 0.7s 0.35s backwards' }}>
+              <span className="link-hover" style={{ fontSize: '11px', fontWeight: '500' }}>Lupa password?</span>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div style={{ fontSize: '12px', color: '#E07B5A', marginBottom: '12px', animation: 'fadeIn 0.3s' }}>
+                {error}
+              </div>
+            )}
+
+            {/* Submit Button */}
+            <div style={{ animation: 'fadeUp 0.7s 0.4s backwards' }}>
+              <button type="submit" className="btn-submit" disabled={isLoading}>
+                {isLoading ? 'MEMPROSES...' : 'MASUK SEKARANG'}
+              </button>
+            </div>
+          </form>
+
+          {/* Divider */}
+          <div style={{ display: 'flex', alignItems: 'center', margin: '20px 0', animation: 'fadeIn 0.7s 0.5s backwards' }}>
+            <div style={{ flex: 1, height: '1px', backgroundColor: '#EDE5D5' }} />
+            <div style={{ padding: '0 12px', fontSize: '11px', color: '#C8B890' }}>atau</div>
+            <div style={{ flex: 1, height: '1px', backgroundColor: '#EDE5D5' }} />
+          </div>
+
+          {/* Link Daftar */}
+          <div style={{ textAlign: 'center', fontSize: '13px', color: '#9A8860', animation: 'fadeIn 0.7s 0.6s backwards' }}>
+            Belum punya akun? <span className="link-hover" onClick={() => navigate('/register')} style={{ padding: '10px 0' }}>Daftar di sini</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default LoginPage;
