@@ -1,34 +1,16 @@
-# Tugas Regression Test Suite - API BilliardPro
+# React + Vite
 
-[![Regression Test Suite](https://github.com/Winnedapiraa12/billiard-reservasi/actions/workflows/test.yml/badge.svg)](https://github.com/Winnedapiraa12/billiard-reservasi/actions)
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-Repositori ini berisi pengerjaan tugas individu untuk implementasi Regression Test Suite menggunakan Jest dan Supertest pada REST API reservasi BilliardPro. 
+Currently, two official plugins are available:
 
----
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## Cara Menjalankan Test
-1. Masuk ke direktori `backend` melalui terminal.
-2. Jalankan `npm install` untuk mengunduh semua dependencies.
-3. Ketik `npm test` untuk mengeksekusi seluruh pengujian.
-4. Ketik `npm test -- --coverage` untuk melihat laporan persentase *code coverage*.
+## React Compiler
 
----
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-## 1. Skenario & Kualitas Test Case
-Terdapat **10 test case** yang disusun khusus untuk menguji fungsionalitas modul Reservasi (`/api/reservasi`). Pengujian ini sudah mencakup jalur normal (*happy path*) dan skenario gagal (*error scenario*) seperti pencegahan input jam yang tidak valid atau jadwal meja yang bentrok. Setiap blok pengujian ditulis secara terstruktur menggunakan pola **AAA (Arrange, Act, Assert)** agar kode lebih mudah dibaca.
+## Expanding the ESLint configuration
 
----
-
-## 2. Hasil Code Coverage
-![Laporan Coverage](./assets/coverage.png)
-
-**Analisis Singkat:**
-Dari hasil eksekusi Jest, *line coverage* khusus untuk file logika `reservasiController.js` telah mencapai **89.47%**. Angka ini sudah melampaui standar minimal 75% yang disyaratkan. Hampir seluruh percabangan logika bisnis telah berhasil dilalui oleh *test suite*.
-
----
-
-## 3. Demonstrasi Deteksi Regresi
-![Bukti Deteksi Regresi](./assets/regresi.png)
-
-**Pembuktian:**
-Gambar di atas adalah bukti bahwa *test suite* ini benar-benar berfungsi menangkap *bug* atau ketidaksengajaan. Ketika blok kode validasi waktu pada *controller* sengaja saya matikan sementara, *test suite* langsung bereaksi dan menggagalkan pengujian (**FAIL**). Setelah kodenya diperbaiki seperti semula, seluruh test kembali hijau (**PASS**). Ini membuktikan bahwa fungsionalitas API sudah terlindungi dari perubahan yang merusak.
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
